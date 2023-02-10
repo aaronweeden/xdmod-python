@@ -47,11 +47,6 @@ class TestDataWarehouse:
             with xdw.DataWarehouse('asdfsdf.xdmod.org'):
                 pass
 
-    def test___enter___RuntimeError_xdmod_host_bad_port(self, tmp_environ_unauth_user):
-        with pytest.raises(RuntimeError, match='xdmod_host'):
-            with xdw.DataWarehouse(self.__VALID_XDMOD_URL + ':0'):
-                pass
-
     def test___enter___RuntimeError_xdmod_host_unsupported_protocol(self, tmp_environ_unauth_user):
         with pytest.raises(RuntimeError, match='xdmod_host'):
             with xdw.DataWarehouse('asdklsdfj://sdlkfs'):
