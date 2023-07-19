@@ -402,6 +402,64 @@ class DataWarehouse:
             'id',
         )
 
+    def get_compliance_data(self, timeframe):
+        response = self.__http_requester._request_json(
+            '/controllers/compliance.php',
+            {'timeframe_mode': timeframe},
+        )
+        return response
+
+    def describe_resources(self):
+        names = []
+        types = []
+        resource_ids = []
+        cdata = self.get_compliance_data('to_date')
+        for resource in cdata['metaData']['fields']:
+            if resource['name'] == 'requirement':
+                continue
+            names.append(
+                resource['header'][:-7].split('>')[1].replace('-', ' ')
+            )
+            types.append(resource['status'].split('|')[0].strip())
+            resource_ids.append(resource['resource_id'])
+        return pd.Series(data=types, index=names)
+
+    def get_dataflow_quality(self, params, is_numpy=False):
+        type_to_title = {
+            'gpu': '% of jobs with GPU information',
+            'hardware': '% of jobs with hardware perf information',
+            'cpu': '% of jobs with cpu usage information',
+            'script': '% of jobs with Job Batch Script information',
+            'realms': '% of jobs in the SUPReMM realm compared to Jobs realm',
+        }
+        response = self.__http_requester._request_json(
+            '/rest/supremm_dataflow/quality',
+            params,
+        )
+        if response['success']:
+            result = response['result']
+            jobs = [job for job in result]
+            dates = [
+                date.strftime('%Y-%m-%d') for date in pd.date_range(
+                    params['start'],
+                    params['end'],
+                    freq='D',
+                ).date
+            ]
+            quality = np.empty((len(jobs), len(dates)))
+            for i in range(len(jobs)):
+                for j in range(len(dates)):
+                    job_i = result[jobs[i]]
+                    if job_i.get(dates[j], np.nan) != 'N/A':
+                        quality[i, j] = job_i.get(dates[j], np.nan)
+                    else:
+                        quality[i, j] = np.nan
+            if is_numpy:
+                return quality
+            df = pd.DataFrame(data=quality, index=jobs, columns=dates)
+            df.name = type_to_title[params['type']]
+            return df
+
     def _get_metric_label(self, realm, metric_id):
         d = self.__descriptors._get_aggregate()
         return d[realm]['metrics'][metric_id]['label']
