@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+import time
 from urllib.parse import urlencode
 import xdmod_data._validator as _validator
 from xdmod_data.__version__ import __title__, __version__
@@ -46,6 +47,7 @@ class _HttpRequester:
         data = []
         num_rows = limit
         offset = 0
+        old_time = time.time()
         while num_rows == limit:
             response = self._request_json(
                 path='/rest/v1/warehouse/raw-data?' + url_params
@@ -54,8 +56,13 @@ class _HttpRequester:
             partial_data = response['data']
             data += partial_data
             if params['show_progress']:
-                progress_msg = 'Got ' + str(len(data)) + ' rows...'
-                print(progress_msg, end='\r')
+                new_time = time.time()
+                progress_msg = (
+                    'Got ' + str(len(data)) + ' rows ('
+                    + str(new_time - old_time) + ')...'
+                )
+                print(progress_msg)
+                old_time = new_time
             num_rows = len(partial_data)
             offset += limit
         if params['show_progress']:
