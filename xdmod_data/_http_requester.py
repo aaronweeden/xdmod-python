@@ -1,5 +1,6 @@
 import json
 import os
+import psutil
 import requests
 import time
 from urllib.parse import urlencode
@@ -47,7 +48,9 @@ class _HttpRequester:
         data = []
         num_rows = limit
         offset = 0
-        old_time = time.time()
+        if params['show_progress']:
+            old_time = time.time()
+            process = psutil.Process()
         while num_rows == limit:
             response = self._request_json(
                 path='/rest/v1/warehouse/raw-data?' + url_params
@@ -59,7 +62,8 @@ class _HttpRequester:
                 new_time = time.time()
                 progress_msg = (
                     'Got ' + str(len(data)) + ' rows ('
-                    + str(new_time - old_time) + ')...'
+                    + str(new_time - old_time) + ' sec, '
+                    + str(process.memory_info().rss / 1e6) + ' MB)...'
                 )
                 print(progress_msg)
                 old_time = new_time
