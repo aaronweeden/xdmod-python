@@ -49,8 +49,9 @@ class _HttpRequester:
         num_rows = limit
         offset = 0
         if params['show_progress']:
-            old_time = time.time()
+            start_time = time.time()
             process = psutil.Process()
+            start_mb = process.memory_info().rss / 1e6
         while num_rows == limit:
             response = self._request_json(
                 path='/rest/v1/warehouse/raw-data?' + url_params
@@ -60,13 +61,18 @@ class _HttpRequester:
             data += partial_data
             if params['show_progress']:
                 new_time = time.time()
+                new_mb = process.memory_info().rss / 1e6
                 progress_msg = (
                     'Got ' + str(len(data)) + ' rows ('
-                    + str(new_time - old_time) + ' sec, '
-                    + str(process.memory_info().rss / 1e6) + ' MB)...'
+                    + str(new_time - start_time) + ' sec'
+                    + ', ' + str(new_mb - start_mb) + ' MB'
+                    + ', ' + str(
+                        (new_mb - start_mb)
+                        / (new_time - start_time)
+                    ) + ' MB/sec'
+                    + ')...'
                 )
                 print(progress_msg)
-                old_time = new_time
             num_rows = len(partial_data)
             offset += limit
         if params['show_progress']:
