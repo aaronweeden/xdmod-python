@@ -1,8 +1,12 @@
+import os
+from os.path import expanduser
+import pandas
+from pathlib import Path
 import pytest
 from xdmod_data.warehouse import DataWarehouse
-import pandas
 
-VALID_XDMOD_URL = 'https://xdmod-dev.ccr.xdmod.org:9001'
+VALID_XDMOD_URL = 'https://xdmod.access-ci.org'
+TOKEN_PATH = '~/.xdmod-data-token'
 INVALID_STR = 'asdlkfjsdlkfisdjkfjd'
 METHOD_PARAMS = {
     'get_data': (
@@ -97,6 +101,11 @@ for method in METHOD_PARAMS:
             key_error_test_names += [method + ':' + param]
             (value, match) = KEY_ERROR_TEST_VALUES_AND_MATCHES[param]
             key_error_test_params += [(method, {'filters': value}, match)]
+
+
+with open(Path(expanduser(TOKEN_PATH)), 'r') as token_file:
+    token = token_file.read().replace('\n', '').strip()
+os.environ['XDMOD_API_TOKEN'] = token
 
 
 @pytest.fixture(scope='module')
