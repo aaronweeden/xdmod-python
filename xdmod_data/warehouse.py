@@ -47,13 +47,14 @@ class DataWarehouse:
 
     def get_data(
         self,
-        duration='Previous month',
-        realm='Jobs',
-        metric='CPU Hours: Total',
+        *,
+        duration,
+        realm,
+        metric,
         dimension=None,
-        filters={},
-        dataset_type='timeseries',
+        dataset_type,
         aggregation_unit='Auto',
+        filters={},
     ):
         """Get a data frame or series containing data from the warehouse.
 
@@ -83,29 +84,30 @@ class DataWarehouse:
 
            Parameters
            ----------
-           duration : str or object of length 2 of str, optional
+           duration : str or object of length 2 of str
                The time period over which to collect data. Either a string
                value from `get_durations()` (case insensitive) or an object of
                length two with start and end dates specified in 'YYYY-MM-DD'
                format.
-           realm : str, optional
+           realm : str
                A realm in the data warehouse. Can be specified by its ID or its
                label. See `describe_realms()`.
-           metric : str, optional
+           metric : str
                A metric in the given realm of the data warehouse. Can be
                specified by its ID or its label. See `describe_metrics()`.
            dimension : str, optional
                A dimension of the given realm in the data warehouse. Can be
                specified by its ID or its label. See `describe_dimensions()`.
+           dataset_type : str
+               Either 'timeseries' or 'aggregate'.
+           aggregation_unit : str, optional
+               The units by which to aggregate timeseries data. Must be one of
+               the valid values from `get_aggregation_units()` (case
+               insensitive).
            filters : mapping, optional
                A mapping of dimensions to their possible values. Results will
                only be included whose values for each of the given dimensions
                match one of the corresponding given values.
-           dataset_type : str, optional
-               Either 'timeseries' or 'aggregate'.
-           aggregation_unit : str, optional
-               The units by which to aggregate data. Must be one of the valid
-               values from `get_aggregation_units()` (case insensitive).
 
            Returns
            -------
