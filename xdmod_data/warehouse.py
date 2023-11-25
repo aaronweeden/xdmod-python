@@ -50,7 +50,8 @@ class DataWarehouse:
         *,
         duration,
         realm,
-        metric,
+        metrics=None,
+        metric=None,
         dimension='None',
         dataset_type,
         aggregation_unit='Auto',
@@ -97,14 +98,21 @@ class DataWarehouse:
            realm : str
                A realm in the data warehouse. Can be specified by its ID or its
                label. See `describe_realms()`.
-           metric : str
-               A metric in the given realm of the data warehouse. Can be
-               specified by its ID or its label. See `describe_metrics()`.
            dimension : str, optional
                A dimension of the given realm in the data warehouse. Can be
                specified by its ID or its label. See `describe_dimensions()`.
            dataset_type : str
                Either 'timeseries' or 'aggregate'.
+           metrics : str or sequence of str, optional
+               A metric or list of metrics in the given realm of the data
+               warehouse. Although this parameter is listed as optional, either
+               it or its alias `metric` must be specified. If a sequence is
+               provided, the `dimension` parameter must have value None,
+               'none', or 'None', and the resulting DataFrame will have one
+               column for each metric. Metrics can be specified by IDs or
+               labels. See `describe_metrics()`.
+           metric : str or sequence of str, optional
+               Alias for `metrics`.
            aggregation_unit : str, optional
                The units by which to aggregate timeseries data. Must be one of
                the valid values from `get_aggregation_units()` (case
