@@ -65,4 +65,4 @@ def test___enter___RuntimeError_401():
         + ' to a valid API token.'
     ):
         with DataWarehouse(VALID_XDMOD_URL) as dw:
-            dw.describe_realms()
+            dw.get_realms()
