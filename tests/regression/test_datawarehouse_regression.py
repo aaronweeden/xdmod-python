@@ -73,21 +73,33 @@ def __assert_descriptor_dfs_equal(data_file, actual):
     __assert_dfs_equal(data_file, actual, 'string')
 
 
-def test_describe_realms(valid_dw):
+def test_get_realms(valid_dw):
+    __assert_descriptor_dfs_equal(
+        'realms.csv',
+        valid_dw.get_realms(),
+    )
     __assert_descriptor_dfs_equal(
         'realms.csv',
         valid_dw.describe_realms(),
     )
 
 
-def test_describe_metrics(valid_dw):
+def test_get_metrics(valid_dw):
+    __assert_descriptor_dfs_equal(
+        'jobs-metrics.csv',
+        valid_dw.get_metrics('Jobs'),
+    )
     __assert_descriptor_dfs_equal(
         'jobs-metrics.csv',
         valid_dw.describe_metrics('Jobs'),
     )
 
 
-def test_describe_dimensions(valid_dw):
+def test_get_dimensions(valid_dw):
+    __assert_descriptor_dfs_equal(
+        'jobs-dimensions.csv',
+        valid_dw.get_dimensions('Jobs'),
+    )
     __assert_descriptor_dfs_equal(
         'jobs-dimensions.csv',
         valid_dw.describe_dimensions('Jobs'),
