@@ -202,6 +202,10 @@ def test_TypeError(dw_methods, method, param):
     __test_exception(dw_methods, method, {param: 2}, TypeError, param)
 
 
+def test_get_data_dimension_none(dw_methods):
+    __run_method(dw_methods, 'get_data', {'dimension': None})
+
+
 @pytest.mark.parametrize(
     'method',
     value_error_test_methods,
