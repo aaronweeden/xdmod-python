@@ -25,6 +25,8 @@ def _validate_get_data_params(data_warehouse, descriptors, params):
         results['realm'],
         params['metric'],
     )
+    if params['dimension'] is None:
+        params['dimension'] = 'None'
     results['dimension'] = _find_dimension_id(
         descriptors,
         results['realm'],

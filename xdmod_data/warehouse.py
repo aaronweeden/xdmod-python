@@ -50,7 +50,7 @@ class DataWarehouse:
         duration='Previous month',
         realm='Jobs',
         metric='CPU Hours: Total',
-        dimension='None',
+        dimension=None,
         filters={},
         dataset_type='timeseries',
         aggregation_unit='Auto',
@@ -63,21 +63,23 @@ class DataWarehouse:
            values are filled in with the value `np.nan`. In the DataFrame, the
            index is a DatetimeIndex with the name 'Time' that contains the time
            values for the given `duration` in increments determined by
-           `aggregation_unit`. If `dimension` is 'None', the DataFrame columns
-           are an index named 'Metric' whose datum is the label of the given
-           `metric`. If `dimension` is not 'None', the DataFrame columns are an
-           index whose name is the label of the given `dimension` and whose
-           data are the labels of each of the values of the given `dimension`.
+           `aggregation_unit`. If `dimension` is None (or 'none' or 'None'),
+           the DataFrame columns are an index named 'Metric' whose datum is the
+           label of the given `metric`. If `dimension` is not None (or 'none'
+           or 'None'), the DataFrame columns are an index whose name is the
+           label of the given `dimension` and whose data are the labels of each
+           of the values of the given `dimension`.
 
            If `dataset_type` is 'aggregate', a Pandas Series is returned. The
            data in the Series are the float64 values for the corresponding
            value of `dimension`. Missing values are filled in with the value
-           `np.nan`. If `dimension` is 'None', the Series is unnamed, and the
-           index is unnamed and contains only the label of the given `metric`.
-           If `dimension` is not 'None', the name of the Series is the label of
-           the given `metric`, the name of the index is the label of the given
-           `dimension`, and the index contains the labels of each of the values
-           of the given `dimension`.
+           `np.nan`. If `dimension` is None (or 'none' or 'None'), the Series
+           is unnamed, and the index is unnamed and contains only the label of
+           the given `metric`. If `dimension` is not None (or 'none' or
+           'None'), the name of the Series is the label of the given `metric`,
+           the name of the index is the label of the given `dimension`, and the
+           index contains the labels of each of the values of the given
+           `dimension`.
 
            Parameters
            ----------
