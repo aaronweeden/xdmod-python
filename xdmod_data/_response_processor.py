@@ -16,38 +16,35 @@ def _process_get_data_response(dw, params, response):
         params['dimension'],
     )
     csv_data = csv.reader(response.splitlines())
-    if params['dataset_type'] == 'timeseries':
-        return __parse_timeseries_csv_data(dw, params, csv_data)
-    elif params['dataset_type'] == 'aggregate':
-        return __parse_aggregate_csv_data(params, csv_data)
+    return __parse_csv_data(dw, params, csv_data)
 
 
-def __parse_timeseries_csv_data(dw, params, csv_data):
+def __parse_csv_data(dw, params, csv_data):
     time_values = []
-    data = []
-    for line_num, line in enumerate(csv_data):
-        if line_num == 7:
-            dimension_values = __parse_timeseries_dimension_values(line[1:])
-        elif line_num > 7 and len(line) > 1:
-            time_values.append(__parse_timeseries_date_string(line[0]))
-            data.append(np.asarray(line[1:]))
-    return __get_timeseries_data_frame(
-        dw,
-        params,
-        data,
-        time_values,
-        dimension_values,
-    )
-
-
-def __parse_aggregate_csv_data(params, csv_data):
     dimension_values = []
     data = []
     for line_num, line in enumerate(csv_data):
-        if line_num > 7 and len(line) > 1:
-            dimension_values.append(html.unescape(line[0]))
-            data.append(line[1])
-    return __get_aggregate_series(params, data, dimension_values)
+        if params['dataset_type'] == 'timeseries' and line_num == 7:
+            dimension_values = __parse_timeseries_dimension_values(line[1:])
+        elif line_num > 7 and len(line) > 1:
+            if params['dataset_type'] == 'timeseries':
+                time_values.append(__parse_timeseries_date_string(line[0]))
+                data.append(np.asarray(line[1:]))
+            else:
+                dimension_values.append(html.unescape(line[0]))
+                data.append(line[1])
+    if params['dataset_type'] == 'timeseries':
+        index = __get_timeseries_index(time_values)
+        columns = __get_timeseries_columns(params, dimension_values)
+    else:
+        index = __get_aggregate_index(params, dimension_values)
+        columns = __get_aggregate_columns(params)
+    return pd.DataFrame(
+        data=data,
+        index=index,
+        columns=columns,
+        dtype='Float64',
+    ).fillna(value=np.nan)
 
 
 def __parse_timeseries_dimension_values(labels):
@@ -82,46 +79,35 @@ def __parse_timeseries_date_string(date_string):
     return datetime.strptime(date_string, format_)
 
 
-def __get_timeseries_data_frame(
-    dw,
-    params,
-    data,
-    time_values,
-    dimension_values,
-):
-    return pd.DataFrame(
-        data=data,
-        index=pd.Series(
-            data=time_values,
-            dtype='datetime64[ns]',
-            name='Time',
-        ),
-        columns=__get_timeseries_data_frame_columns(
-            dw,
-            params,
-            dimension_values,
-        ),
-        dtype='Float64',
-    ).fillna(value=np.nan)
-
-
-def __get_aggregate_series(params, data, dimension_values):
-    if params['dimension'] is None:
-        index_data = params['metric']
-        series_name = None
-    else:
-        index_data = dimension_values
-        series_name = params['metric']
+def __get_timeseries_index(time_values):
     return pd.Series(
-        data=data,
-        index=pd.Series(
-            data=index_data,
-            dtype='string',
-            name=params['dimension'],
-        ),
-        dtype='Float64',
-        name=series_name,
-    ).fillna(value=np.nan)
+        data=time_values,
+        dtype='datetime64[ns]',
+        name='Time',
+    )
+
+
+def __get_timeseries_columns(params, dimension_values):
+    if params['dimension'] is None:
+        return __get_aggregate_columns(params)
+    else:
+        return __get_aggregate_index(params, dimension_values)
+
+
+def __get_aggregate_index(params, dimension_values):
+    return pd.Series(
+        data=dimension_values,
+        dtype='string',
+        name=params['dimension'],
+    )
+
+
+def __get_aggregate_columns(params):
+    return pd.Series(
+        data=params['metric'],
+        dtype='string',
+        name='Metric',
+    )
 
 
 def __parse_quarter_date_string(date_string):
@@ -142,19 +128,3 @@ def __parse_quarter_date_string(date_string):
     date_string = year + '-' + month + '-01'
     format_ = '%Y-%m-%d'
     return (date_string, format_)
-
-
-def __get_timeseries_data_frame_columns(dw, params, dimension_values):
-    if params['dimension'] is None:
-        columns = pd.Series(
-            data=params['metric'],
-            dtype='string',
-            name='Metric',
-        )
-    else:
-        columns = pd.Series(
-            data=dimension_values,
-            dtype='string',
-            name=params['dimension'],
-        )
-    return columns

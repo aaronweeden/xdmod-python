@@ -1,3 +1,4 @@
+import itertools
 import os
 from os.path import expanduser
 import pandas
@@ -249,67 +250,64 @@ def __test_DataFrame_return_value(
         assert df.index.size == index_size
 
 
-get_data_return_value_test_params = {
-    'duration': ('2020-01-01', '2020-01-31'),
-    'realm': 'Jobs',
-    'metric': 'Number of Users: Active',
-    'dimension': 'None',
-    'filters': {},
-    'dataset_type': 'timeseries',
-    'aggregation_unit': 'Day',
-}
-
-
 @pytest.mark.parametrize(
-    'additional_params, columns_name, index_size',
-    [
-        (
-            {},
-            'Metric',
-            31,
-        ),
-        (
-            {'filters': {'Service Provider': 'StonyBrook'}},
-            'Metric',
-            0,
-        ),
-        (
-            {'dimension': 'Resource'},
-            'Resource',
-            31,
-        ),
-        (
-            {
-                'dimension': 'Resource',
-                'filters': {'Service Provider': 'StonyBrook'}
-            },
-            'Resource',
-            0,
-        ),
-    ],
-    ids=(
-        'no_dimension,not_empty',
-        'no_dimension,empty',
-        'dimension,not_empty',
-        'dimension,empty',
+    'dataset_type, dimension, empty',
+    itertools.product(
+        *(
+            ('timeseries', 'aggregate'),
+            ('dimension', 'no_dimension'),
+            ('empty', 'not_empty'),
+        )
     ),
 )
-def test_get_data_timeseries_return_value(
+def test_get_data_return_value(
     dw_methods,
-    additional_params,
-    columns_name,
-    index_size,
+    dataset_type,
+    dimension,
+    empty,
 ):
-    params = {**get_data_return_value_test_params, **additional_params}
-    if columns_name == 'Metric':
-        columns_data = [get_data_return_value_test_params['metric']]
-        columns_data_subset = False
-    else:
-        columns_data = dw_methods['get_filter_values'](
+    params = {
+        'duration': ('2020-01-01', '2020-01-31'),
+        'realm': 'Jobs',
+        'metric': 'Number of Users: Active',
+        'dimension': 'None',
+        'filters': {},
+        'dataset_type': dataset_type,
+        'aggregation_unit': 'Day',
+    }
+    if dimension == 'dimension':
+        params['dimension'] = 'Resource'
+        dimension_values = dw_methods['get_filter_values'](
             params['realm'],
             params['dimension'],
         )['label'].to_list()
+    if empty == 'empty':
+        params['filters'] = {'Service Provider': 'StonyBrook'}
+        index_size = 0
+    if dataset_type == 'timeseries' and dimension == 'dimension':
+        columns_name = 'Resource'
+        columns_data = dimension_values
         columns_data_subset = True
+    else:
+        columns_name = 'Metric'
+        columns_data = [params['metric']]
+        columns_data_subset = False
+    if dataset_type == 'timeseries':
+        index_type = pandas.core.indexes.datetimes.DatetimeIndex
+        index_dtype = 'datetime64[ns]'
+        index_name = 'Time'
+        if empty == 'not_empty':
+            index_size = 31
+    else:
+        index_type = pandas.core.indexes.base.Index
+        index_dtype = 'string'
+        if dimension == 'dimension':
+            index_name = 'Resource'
+            if empty == 'not_empty':
+                index_size = 8
+        else:
+            index_name = None
+            index_size = 1
     __test_DataFrame_return_value(
         dw_methods,
         method='get_data',
@@ -318,80 +316,11 @@ def test_get_data_timeseries_return_value(
         columns_name=columns_name,
         columns_data=columns_data,
         columns_data_subset=columns_data_subset,
-        index_type=pandas.core.indexes.datetimes.DatetimeIndex,
-        index_dtype='datetime64[ns]',
-        index_name='Time',
+        index_type=index_type,
+        index_dtype=index_dtype,
+        index_name=index_name,
         index_size=index_size,
     )
-
-
-get_data_aggregate_return_value_test_params = {
-    **get_data_return_value_test_params,
-    **{'dataset_type': 'aggregate'},
-}
-
-
-@pytest.mark.parametrize(
-    'additional_params, index_name, index_size',
-    [
-        (
-            {},
-            None,
-            1,
-        ),
-        (
-            {'filters': {'Service Provider': 'StonyBrook'}},
-            None,
-            1,
-        ),
-        (
-            {'dimension': 'Resource'},
-            'Resource',
-            8,
-        ),
-        (
-            {
-                'dimension': 'Resource',
-                'filters': {'Service Provider': 'StonyBrook'}
-            },
-            'Resource',
-            0,
-        ),
-    ],
-    ids=(
-        'no_dimension,not_empty',
-        'no_dimension,empty',
-        'dimension,not_empty',
-        'dimension,empty',
-    ),
-)
-def test_get_data_aggregate_return_value(
-    dw_methods,
-    additional_params,
-    index_name,
-    index_size,
-):
-    params = {
-        **get_data_aggregate_return_value_test_params,
-        **additional_params,
-    }
-    series = __run_method(dw_methods, 'get_data', params)
-    assert isinstance(series, pandas.core.series.Series)
-    assert series.dtype == 'Float64'
-    if index_name is None:
-        assert series.name is None
-        assert series.index.to_list() == [params['metric']]
-    else:
-        assert series.name == params['metric']
-        dimension_values = dw_methods['get_filter_values'](
-            params['realm'],
-            params['dimension'],
-        )['label'].to_list()
-        assert series.index.to_list().sort() == dimension_values.sort()
-    assert isinstance(series.index, pandas.core.indexes.base.Index)
-    assert series.index.dtype == 'string'
-    assert series.index.name == index_name
-    assert series.index.size == index_size
 
 
 get_descriptors_return_value_test_columns_data = {

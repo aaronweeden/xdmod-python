@@ -2,6 +2,7 @@
 
 ## Main development branch
 - Make `get_data()` parameters required ([\#20](https://github.com/ubccr/xdmod-data/pull/20)).
+- Change return value of `get_data()` to always be a DataFrame ([\#20](https://github.com/ubccr/xdmod-data/pull/20)).
 - Update tests and testing instructions ([\#14](https://github.com/ubccr/xdmod-data/pull/14)).
 
 ## v1.0.0 (2023-07-21)

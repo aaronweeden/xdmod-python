@@ -56,29 +56,36 @@ class DataWarehouse:
         aggregation_unit='Auto',
         filters={},
     ):
-        """Get a data frame or series containing data from the warehouse.
+        """Get a data frame containing data from the warehouse.
 
-           If `dataset_type` is 'timeseries', a Pandas DataFrame is returned.
-           The data in the DataFrame are the float64 values for the
-           corresponding values of time, `metric`, and `dimension`. Missing
-           values are filled in with the value `np.nan`. In the DataFrame, the
-           index is a DatetimeIndex with the name 'Time' that contains the time
-           values for the given `duration` in increments determined by
-           `aggregation_unit`. If `dimension` is 'None', the DataFrame columns
-           are an index named 'Metric' whose datum is the label of the given
-           `metric`. If `dimension` is not 'None', the DataFrame columns are an
-           index whose name is the label of the given `dimension` and whose
-           data are the labels of each of the values of the given `dimension`.
+           If `dataset_type` is 'timeseries':
+           - The data in the data frame are the float64 values for the
+             corresponding values of time, `metric`, and `dimension`.
+           - The index of the data frame is a DatetimeIndex with the name
+             'Time' that contains the time values for the given `duration` in
+             increments determined by `aggregation_unit`.
+           - If `dimension` is 'None', the data frame columns are a Series
+             named 'Metric' whose datum is the label of the given `metric`.
+           - If `dimension` is not 'None', the data frame columns are a Series
+             whose name is the label of the given `dimension` and whose data
+             are the labels of each of the values of the given `dimension`.
 
-           If `dataset_type` is 'aggregate', a Pandas Series is returned. The
-           data in the Series are the float64 values for the corresponding
-           value of `dimension`. Missing values are filled in with the value
-           `np.nan`. If `dimension` is 'None', the Series is unnamed, and the
-           index is unnamed and contains only the label of the given `metric`.
-           If `dimension` is not 'None', the name of the Series is the label of
-           the given `metric`, the name of the index is the label of the given
-           `dimension`, and the index contains the labels of each of the values
-           of the given `dimension`.
+           If `dataset_type` is 'aggregate':
+           - The data in the data frame are the float64 values for the
+             corresponding values of `dimension`.
+           - The columns of the data frame are a Series whose name is 'Metric',
+             and whose value is the label of the given `metric`.
+           - The index of the data frame is a Series whose name is the label of
+             the given `dimension`.
+           - If `dimension` is 'None', the index is a Series with no name that
+             contains a single datum that is the organization name of the Open
+             XDMoD instance.
+           - If `dimension` is not 'None', the index is a Series whose name is
+             the label of the given `dimension` and whose data are the labels
+             of each of the values of the given `dimension`.
+
+           Missing values in the data frame are filled in with the value
+           `np.nan`.
 
            Parameters
            ----------
@@ -109,7 +116,7 @@ class DataWarehouse:
 
            Returns
            -------
-           pandas.core.frame.DataFrame | pandas.core.series.Series
+           pandas.core.frame.DataFrame
 
            Raises
            ------
