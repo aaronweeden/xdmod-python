@@ -1,6 +1,7 @@
 # xdmod-data Changelog
 
 ## Main development branch
+- Add `get_data()` parameter aliases: `statistic` and `group_by` ([\#20](https://github.com/ubccr/xdmod-data/pull/20)).
 - Allow the `dimension` parameter of `get_data()` to be `None` ([\#20](https://github.com/ubccr/xdmod-data/pull/20)).
 - Make `get_data()` parameters required ([\#20](https://github.com/ubccr/xdmod-data/pull/20)).
 - Add `get_*()` aliases for `describe_*()` methods. ([\#20](https://github.com/ubccr/xdmod-data/pull/20)).

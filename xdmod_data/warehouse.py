@@ -50,8 +50,10 @@ class DataWarehouse:
         *,
         duration,
         realm,
-        metric,
+        metric=None,
+        statistic=None,
         dimension=None,
+        group_by=None,
         dataset_type,
         aggregation_unit='Auto',
         filters={},
@@ -92,12 +94,18 @@ class DataWarehouse:
            realm : str
                A realm in the data warehouse. Can be specified by its ID or its
                label. See `get_realms()`.
-           metric : str
-               A metric in the given realm of the data warehouse. Can be
-               specified by its ID or its label. See `get_metrics()`.
+           metric : str, optional
+               A metric in the given realm of the data warehouse. Although this
+               is marked as optional, either this or `statistic` must be
+               specified. Can be specified by its ID or its label. See
+               `get_metrics()`.
+           statistic : str, optional
+               Alias for `metric`.
            dimension : str, optional
                A dimension of the given realm in the data warehouse. Can be
                specified by its ID or its label. See `get_dimensions()`.
+           group_by : str, optional
+               Alias for `dimension`.
            dataset_type : str
                Either 'timeseries' or 'aggregate'.
            aggregation_unit : str, optional
@@ -279,6 +287,16 @@ class DataWarehouse:
         """
         return self.get_metrics(realm)
 
+    def get_statistics(self, realm):
+        """Alias for `get_metrics()`.
+        """
+        return self.get_metrics(realm)
+
+    def describe_statistics(self, realm):
+        """Alias for `get_metrics()`.
+        """
+        return self.get_metrics(realm)
+
     def get_dimensions(self, realm):
         """Get a data frame describing the valid dimensions for the given
            realm.
@@ -307,6 +325,16 @@ class DataWarehouse:
         return self.__get_metrics_or_dimensions(realm, 'dimensions')
 
     def describe_dimensions(self, realm):
+        """Alias for `get_dimensions()`.
+        """
+        return self.get_dimensions(realm)
+
+    def get_group_bys(self, realm):
+        """Alias for `get_dimensions()`.
+        """
+        return self.get_dimensions(realm)
+
+    def describe_group_bys(self, realm):
         """Alias for `get_dimensions()`.
         """
         return self.get_dimensions(realm)

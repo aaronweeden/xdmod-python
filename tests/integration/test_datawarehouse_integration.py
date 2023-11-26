@@ -29,13 +29,23 @@ METHOD_PARAMS = {
     'describe_realms': (),
     'get_metrics': ('realm',),
     'describe_metrics': ('realm',),
+    'get_statistics': ('realm',),
+    'describe_statistics': ('realm',),
     'get_dimensions': ('realm',),
     'describe_dimensions': ('realm',),
+    'get_group_bys': ('realm',),
+    'describe_group_bys': ('realm',),
     'get_filter_values': ('realm', 'dimension',),
     'get_raw_realms': (),
     'describe_raw_realms': (),
     'get_raw_fields': ('realm',),
     'describe_raw_fields': ('realm',),
+}
+METHOD_PARAM_ALIASES = {
+    'get_data': {
+        'metric': ('statistic',),
+        'dimension': ('group_by',),
+    },
 }
 VALID_DATE = '2020-01-01'
 VALID_DIMENSION = 'Resource'
@@ -69,10 +79,10 @@ KEY_ERROR_TEST_VALUES_AND_MATCHES = {
     'field': (INVALID_STR, r'Field .* not found'),
 }
 
-key_error_test_names = []
-duration_test_names = []
-start_end_test_names = []
-type_error_test_names = []
+key_error_test_ids = []
+duration_test_ids = []
+start_end_test_ids = []
+type_error_test_ids = []
 
 default_valid_params = {}
 key_error_test_params = []
@@ -84,15 +94,26 @@ for method in METHOD_PARAMS:
     default_valid_params[method] = {}
     for param in METHOD_PARAMS[method]:
         default_valid_params[method][param] = VALID_VALUES[param]
-        type_error_test_names += [method + ':' + param]
+        type_error_test_ids += [method + ':' + param]
         type_error_test_params += [(method, param)]
         if param in KEY_ERROR_TEST_VALUES_AND_MATCHES:
-            key_error_test_names += [method + ':' + param]
+            key_error_test_ids += [method + ':' + param]
             (value, match) = KEY_ERROR_TEST_VALUES_AND_MATCHES[param]
             key_error_test_params += [(method, {param: value}, match)]
+        if method in METHOD_PARAM_ALIASES and param in METHOD_PARAM_ALIASES[method]:
+            for alias in METHOD_PARAM_ALIASES[method][param]:
+                type_error_test_ids += [method + ':' + alias]
+                type_error_test_params += [(method, alias)]
+            if param in KEY_ERROR_TEST_VALUES_AND_MATCHES:
+                for alias in METHOD_PARAM_ALIASES[method][param]:
+                    key_error_test_ids += [method + ':' + alias]
+                    (value, match) = KEY_ERROR_TEST_VALUES_AND_MATCHES[param]
+                    key_error_test_params += [
+                        (method, {param: None, alias: value}, match)
+                    ]
         if param == 'duration':
-            duration_test_names += [method]
-            start_end_test_names += [
+            duration_test_ids += [method]
+            start_end_test_ids += [
                 method + ':start_date',
                 method + ':end_date',
             ]
@@ -103,9 +124,17 @@ for method in METHOD_PARAMS:
             value_error_test_methods += [method]
     if 'filters' in METHOD_PARAMS[method]:
         for param in ('filter_key', 'filter_value'):
-            key_error_test_names += [method + ':' + param]
+            key_error_test_ids += [method + ':' + param]
             (value, match) = KEY_ERROR_TEST_VALUES_AND_MATCHES[param]
             key_error_test_params += [(method, {'filters': value}, match)]
+
+redundant_alias_test_ids = []
+redundant_alias_test_params = []
+for method in METHOD_PARAM_ALIASES:
+    for param in METHOD_PARAM_ALIASES[method]:
+        for alias in METHOD_PARAM_ALIASES[method][param]:
+            redundant_alias_test_ids += [method + ':' + param + ':' + alias]
+            redundant_alias_test_params += [(method, param, alias)]
 
 
 with open(Path(expanduser(TOKEN_PATH)), 'r') as token_file:
@@ -133,8 +162,12 @@ def __get_dw_methods(dw):
         'describe_realms': dw.describe_realms,
         'get_metrics': dw.get_metrics,
         'describe_metrics': dw.describe_metrics,
+        'get_statistics': dw.get_statistics,
+        'describe_statistics': dw.describe_statistics,
         'get_dimensions': dw.get_dimensions,
         'describe_dimensions': dw.describe_dimensions,
+        'get_group_bys': dw.get_group_bys,
+        'describe_group_bys': dw.describe_group_bys,
         'get_filter_values': dw.get_filter_values,
         'get_raw_realms': dw.get_raw_realms,
         'describe_raw_realms': dw.describe_raw_realms,
@@ -156,7 +189,7 @@ def __test_exception(dw_methods, method, additional_params, error, match):
 @pytest.mark.parametrize(
     'method, params, match',
     key_error_test_params,
-    ids=key_error_test_names,
+    ids=key_error_test_ids,
 )
 def test_KeyError(dw_methods, method, params, match):
     __test_exception(dw_methods, method, params, KeyError, match)
@@ -171,8 +204,12 @@ def test_KeyError(dw_methods, method, params, match):
         'describe_realms',
         'get_metrics',
         'describe_metrics',
+        'get_statistics',
+        'describe_statistics',
         'get_dimensions',
         'describe_dimensions',
+        'get_group_bys',
+        'describe_group_bys',
         'get_filter_values',
         'get_raw_realms',
         'describe_raw_realms',
@@ -196,7 +233,7 @@ def test_RuntimeError_outside_context(
 @pytest.mark.parametrize(
     'method, param, params',
     date_malformed_test_params,
-    ids=start_end_test_names,
+    ids=start_end_test_ids,
 )
 def test_RuntimeError_date_malformed(dw_methods, method, param, params):
     __test_exception(
@@ -211,7 +248,7 @@ def test_RuntimeError_date_malformed(dw_methods, method, param, params):
 @pytest.mark.parametrize(
     'method, param',
     type_error_test_params,
-    ids=type_error_test_names,
+    ids=type_error_test_ids,
 )
 def test_TypeError(dw_methods, method, param):
     __test_exception(dw_methods, method, {param: 2}, TypeError, param)
@@ -224,7 +261,7 @@ def test_get_data_dimension_none(dw_methods):
 @pytest.mark.parametrize(
     'method',
     value_error_test_methods,
-    ids=duration_test_names,
+    ids=duration_test_ids,
 )
 def test_ValueError_duration(dw_methods, method):
     __test_exception(
@@ -418,8 +455,12 @@ get_descriptors_return_value_test_columns_data = {
     'describe_realms': ['label'],
     'get_metrics': ['label', 'description'],
     'describe_metrics': ['label', 'description'],
+    'get_statistics': ['label', 'description'],
+    'describe_statistics': ['label', 'description'],
     'get_dimensions': ['label', 'description'],
     'describe_dimensions': ['label', 'description'],
+    'get_group_bys': ['label', 'description'],
+    'describe_group_bys': ['label', 'description'],
     'get_filter_values': ['label'],
     'get_raw_realms': ['label'],
     'describe_raw_realms': ['label'],
@@ -465,3 +506,21 @@ def test_case_insensitive(dw_methods, method, param, value1, value2):
     data1 = __run_method(dw_methods, method, {param: value1})
     data2 = __run_method(dw_methods, method, {param: value2})
     assert data1.equals(data2)
+
+
+@pytest.mark.parametrize(
+    'method, param, alias',
+    redundant_alias_test_params,
+    ids=redundant_alias_test_ids,
+)
+def test_redundant_alias_params(dw_methods, method, param, alias):
+    __test_exception(
+        dw_methods,
+        method,
+        {param: VALID_VALUES[param], alias: VALID_VALUES[param]},
+        TypeError,
+        (
+            'Either `' + param + '` or `' + alias
+            + '` (must|can) be specified, but not both.'
+        ),
+    )

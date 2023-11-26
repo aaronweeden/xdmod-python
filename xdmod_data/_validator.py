@@ -20,17 +20,33 @@ def _validate_get_data_params(data_warehouse, descriptors, params):
         __validate_duration(params['duration'])
     )
     results['realm'] = _find_realm_id(descriptors, params['realm'])
+    if params['metric'] is not None and params['statistic'] is None:
+        metric = params['metric']
+    elif params['statistic'] is not None and params['metric'] is None:
+        metric = params['statistic']
+    else:
+        raise TypeError(
+            'Either `metric` or `statistic` must be specified, but not both.'
+        )
     results['metric'] = __find_metric_id(
         descriptors,
         results['realm'],
-        params['metric'],
+        metric,
     )
-    if params['dimension'] is None:
-        params['dimension'] = 'None'
+    if params['dimension'] is not None and params['group_by'] is None:
+        dimension = params['dimension']
+    elif params['group_by'] is not None and params['dimension'] is None:
+        dimension = params['group_by']
+    elif params['dimension'] is None and params['group_by'] is None:
+        dimension = 'None'
+    else:
+        raise TypeError(
+            'Either `dimension` or `group_by` can be specified, but not both.'
+        )
     results['dimension'] = _find_dimension_id(
         descriptors,
         results['realm'],
-        params['dimension'],
+        dimension,
     )
     results['filters'] = __validate_filters(
         data_warehouse,
