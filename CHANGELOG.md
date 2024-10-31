@@ -11,6 +11,7 @@ This release fixes an `IOPub` error that can occur when calling
 
 It is compatible with Open XDMoD versions 11.0.x and 10.5.x.
 
+Detailed changes:
 - Document Open XDMoD compatibility in changelog ([\#31](https://github.com/ubccr/xdmod-data/pull/31)).
 - Fix IOPub error when showing progress with `get_raw_data()` ([\#40](https://github.com/ubccr/xdmod-data/pull/40)).
 
@@ -20,6 +21,7 @@ This release has bug fixes, performance improvements, and updates for compatibil
 
 It is compatible with Open XDMoD versions 11.0.x and 10.5.x.
 
+Detailed changes:
 - Add borders to README images ([\#12](https://github.com/ubccr/xdmod-data/pull/12)).
 - Create `PULL_REQUEST_TEMPLATE.md` ([\#13](https://github.com/ubccr/xdmod-data/pull/13)).
 - Add types of changes to pull request template ([\#15](https://github.com/ubccr/xdmod-data/pull/15)).
